@@ -1,4 +1,5 @@
 export type Light = 'sonnig' | 'hell' | 'halbschattig' | 'schattig'
+export type Humidity = 'niedrig' | 'mittel' | 'hoch'
 
 export interface Plant {
   id?: number
@@ -10,9 +11,13 @@ export interface Plant {
   fertilizer?: string
   fertilizingIntervalDays?: number
   potSizeCm?: number
+  substrate?: string
+  humidity?: Humidity
+  temperature?: string
   heightCm?: number
   acquiredAt?: string
   lastWateredAt?: string
+  petSafe?: boolean
   notes?: string
   createdAt: string
   updatedAt: string

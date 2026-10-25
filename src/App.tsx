@@ -1,17 +1,37 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect } from 'react'
 import { PlantCard } from './components/PlantCard'
+import { PlantDetail } from './components/PlantDetail'
+import { PlantForm } from './components/PlantForm'
 import { db, requestPersistentStorage } from './db/db'
+import { routeHref, useRoute } from './lib/router'
 
 function App() {
-  const plants = useLiveQuery(() => db.plants.orderBy('name').toArray(), [])
+  const route = useRoute()
 
   useEffect(() => {
     requestPersistentStorage()
   }, [])
 
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [route.name])
+
   return (
     <div className="app">
+      {route.name === 'home' && <Home />}
+      {route.name === 'new' && <PlantForm />}
+      {route.name === 'edit' && <PlantForm id={route.id} />}
+      {route.name === 'plant' && <PlantDetail id={route.id} />}
+    </div>
+  )
+}
+
+function Home() {
+  const plants = useLiveQuery(() => db.plants.orderBy('name').toArray(), [])
+
+  return (
+    <>
       <header className="app-header">
         <h1>Meine Pflanzen</h1>
       </header>
@@ -21,7 +41,9 @@ function App() {
           <div className="empty-state">
             <div className="empty-state__icon" aria-hidden>🪴</div>
             <p>Noch keine Pflanzen angelegt.</p>
-            <p className="muted">Bald kannst du hier deine erste Pflanze hinzufügen.</p>
+            <a className="button button--primary" href={routeHref({ name: 'new' })}>
+              Erste Pflanze hinzufügen
+            </a>
           </div>
         )}
 
@@ -33,7 +55,13 @@ function App() {
           </div>
         )}
       </main>
-    </div>
+
+      {plants && plants.length > 0 && (
+        <a className="fab" href={routeHref({ name: 'new' })} aria-label="Pflanze hinzufügen">
+          +
+        </a>
+      )}
+    </>
   )
 }
 

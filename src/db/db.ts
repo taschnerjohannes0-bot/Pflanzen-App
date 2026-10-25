@@ -24,3 +24,15 @@ export async function requestPersistentStorage(): Promise<boolean> {
   if (!navigator.storage?.persist) return false
   return (await navigator.storage.persisted()) || navigator.storage.persist()
 }
+
+export async function addPhoto(plantId: number, blob: Blob, takenAt: string): Promise<void> {
+  await db.photos.add({ plantId, blob, takenAt })
+  await db.plants.update(plantId, { updatedAt: new Date().toISOString() })
+}
+
+export async function deletePlant(plantId: number): Promise<void> {
+  await db.transaction('rw', db.plants, db.photos, async () => {
+    await db.photos.where('plantId').equals(plantId).delete()
+    await db.plants.delete(plantId)
+  })
+}
