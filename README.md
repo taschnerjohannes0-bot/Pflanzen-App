@@ -14,6 +14,11 @@ npm run preview  # Build lokal ansehen
 npm run lint
 ```
 
+## Veröffentlichung
+
+Jeder Push auf `main` baut die App und veröffentlicht sie über GitHub Pages (`.github/workflows/deploy.yml`) unter
+https://taschnerjohannes0-bot.github.io/Pflanzen-App/. Voraussetzung: In den Repository-Einstellungen unter Pages ist als Quelle „GitHub Actions“ gewählt.
+
 ## Freistellen
 
 Fotos werden nach dem Speichern im Hintergrund freigestellt (ISNet-Modell über `@imgly/background-removal`, läuft komplett im Browser).

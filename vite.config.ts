@@ -4,6 +4,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Für GitHub Pages läuft die App unter /<repo>/, lokal unter /.
+  base: process.env.BASE_PATH ?? '/',
   plugins: [
     react(),
     VitePWA({
@@ -28,7 +30,8 @@ export default defineConfig({
         short_name: 'Pflanzen',
         description: 'Fotos und Daten deiner Pflanzen festhalten und den Fortschritt vergleichen.',
         lang: 'de',
-        start_url: '/',
+        start_url: '.',
+        scope: '.',
         display: 'standalone',
         background_color: '#f4efe6',
         theme_color: '#2f6b4f',
