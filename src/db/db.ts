@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
+import { processPendingCutouts } from '../lib/cutoutQueue'
 import type { Photo, Plant } from './types'
 
 // Alles bleibt lokal im Browser (IndexedDB), Fotos werden als Blob gespeichert.
@@ -26,8 +27,9 @@ export async function requestPersistentStorage(): Promise<boolean> {
 }
 
 export async function addPhoto(plantId: number, blob: Blob, takenAt: string): Promise<void> {
-  await db.photos.add({ plantId, blob, takenAt })
+  await db.photos.add({ plantId, blob, takenAt, cutoutStatus: 'pending' })
   await db.plants.update(plantId, { updatedAt: new Date().toISOString() })
+  processPendingCutouts()
 }
 
 export async function deletePlant(plantId: number): Promise<void> {
@@ -35,4 +37,9 @@ export async function deletePlant(plantId: number): Promise<void> {
     await db.photos.where('plantId').equals(plantId).delete()
     await db.plants.delete(plantId)
   })
+}
+
+export async function retryCutout(photo: Photo): Promise<void> {
+  await db.photos.update(photo.id!, { cutoutStatus: 'pending' })
+  processPendingCutouts()
 }

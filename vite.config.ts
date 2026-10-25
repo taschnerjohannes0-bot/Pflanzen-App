@@ -9,6 +9,20 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      workbox: {
+        // Das Freistell-Modell (~55 MB) wird erst bei Bedarf geladen und dann dauerhaft gecacht.
+        globIgnores: ['bg-removal/**', 'assets/*.wasm'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.includes('/bg-removal/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'bg-removal',
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
+      },
       manifest: {
         name: 'Pflanzentagebuch',
         short_name: 'Pflanzen',

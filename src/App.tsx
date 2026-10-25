@@ -4,6 +4,7 @@ import { PlantCard } from './components/PlantCard'
 import { PlantDetail } from './components/PlantDetail'
 import { PlantForm } from './components/PlantForm'
 import { db, requestPersistentStorage } from './db/db'
+import { processPendingCutouts } from './lib/cutoutQueue'
 import { routeHref, useRoute } from './lib/router'
 
 function App() {
@@ -11,6 +12,8 @@ function App() {
 
   useEffect(() => {
     requestPersistentStorage()
+    // Fotos, deren Freistellung beim letzten Mal unterbrochen wurde, weiter bearbeiten.
+    processPendingCutouts()
   }, [])
 
   useEffect(() => {

@@ -1,4 +1,5 @@
 export type Light = 'sonnig' | 'hell' | 'halbschattig' | 'schattig'
+export type CutoutStatus = 'pending' | 'done' | 'failed'
 export type Humidity = 'niedrig' | 'mittel' | 'hoch'
 
 export interface Plant {
@@ -27,6 +28,9 @@ export interface Photo {
   id?: number
   plantId: number
   blob: Blob
+  // Freigestellte Pflanze als PNG mit transparentem Hintergrund.
+  cutout?: Blob
+  cutoutStatus?: CutoutStatus
   takenAt: string
   heightCm?: number
   note?: string

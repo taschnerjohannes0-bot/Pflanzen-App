@@ -1,10 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, deletePlant } from '../db/db'
+import { db, deletePlant, retryCutout } from '../db/db'
 import type { Photo, Plant } from '../db/types'
 import { formatDate } from '../lib/format'
 import { navigate, routeHref } from '../lib/router'
-import { useObjectUrl } from '../lib/useObjectUrl'
+import { useCutoutState } from '../lib/cutoutQueue'
 import { AddPhotoButtons } from './AddPhotoButtons'
+import { PhotoImage } from './PhotoImage'
 
 export function PlantDetail({ id }: { id: number }) {
   const plant = useLiveQuery(() => db.plants.get(id), [id])
@@ -61,7 +62,8 @@ export function PlantDetail({ id }: { id: number }) {
 }
 
 function PhotoTile({ photo }: { photo: Photo }) {
-  const url = useObjectUrl(photo.blob)
+  const cutoutState = useCutoutState()
+  const isActive = cutoutState.activePhotoId === photo.id
 
   async function handleDelete() {
     if (confirm('Dieses Foto löschen?')) await db.photos.delete(photo.id!)
@@ -69,7 +71,23 @@ function PhotoTile({ photo }: { photo: Photo }) {
 
   return (
     <figure className="photo-tile">
-      {url && <img src={url} alt={`Foto vom ${formatDate(photo.takenAt)}`} />}
+      <div className="photo-tile__image">
+        <PhotoImage photo={photo} alt={`Foto vom ${formatDate(photo.takenAt)}`} />
+        {photo.cutoutStatus === 'pending' && (
+          <span className="photo-tile__badge">
+            {isActive && cutoutState.download !== undefined && cutoutState.download < 1
+              ? `Lade Freisteller … ${Math.round(cutoutState.download * 100)} %`
+              : isActive
+                ? 'Wird freigestellt …'
+                : 'Wartet …'}
+          </span>
+        )}
+        {photo.cutoutStatus === 'failed' && (
+          <button type="button" className="photo-tile__badge" onClick={() => retryCutout(photo)}>
+            Freistellen fehlgeschlagen · erneut
+          </button>
+        )}
+      </div>
       <figcaption>
         <span>{formatDate(photo.takenAt)}</span>
         <button type="button" className="link-button" onClick={handleDelete} aria-label="Foto löschen">

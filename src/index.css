@@ -86,6 +86,19 @@ body {
   object-fit: cover;
 }
 
+/* Freigestellte Pflanzen stehen ganz im Bild auf einem weichen Hintergrund. */
+.plant-card__image,
+.photo-tile__image {
+  background: radial-gradient(circle at 50% 40%, #eef6ea 0%, var(--primary-soft) 100%);
+}
+
+.plant-card__image img.is-cutout,
+.photo-tile__image img.is-cutout {
+  object-fit: contain;
+  padding: 8%;
+  filter: drop-shadow(0 6px 10px rgb(31 42 36 / 18%));
+}
+
 .plant-card__name {
   font-weight: 600;
   padding: 10px 12px 0;
@@ -313,11 +326,35 @@ h2 {
   box-shadow: var(--shadow);
 }
 
-.photo-tile img {
+.photo-tile__image {
+  position: relative;
+  aspect-ratio: 3 / 4;
+}
+
+.photo-tile__image img {
   display: block;
   width: 100%;
-  aspect-ratio: 3 / 4;
+  height: 100%;
   object-fit: cover;
+}
+
+.photo-tile__badge {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 10px;
+  background: rgb(31 42 36 / 72%);
+  color: #fff;
+  font: inherit;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+button.photo-tile__badge {
+  cursor: pointer;
 }
 
 .photo-tile figcaption {
