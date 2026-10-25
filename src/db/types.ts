@@ -26,6 +26,7 @@ export interface Plant {
   heightCm?: number
   acquiredAt?: string
   lastWateredAt?: string
+  lastFertilizedAt?: string
   petSafe?: boolean
   notes?: string
   createdAt: string

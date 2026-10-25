@@ -38,7 +38,7 @@ function PlantFormInner({ existing }: { existing?: Plant }) {
       set(key, e.currentTarget.value === '' ? undefined : Number(e.currentTarget.value)),
   })
 
-  const date = (key: 'acquiredAt' | 'lastWateredAt') => ({
+  const date = (key: 'acquiredAt' | 'lastWateredAt' | 'lastFertilizedAt') => ({
     type: 'date',
     value: toDateInput(draft[key]),
     onChange: (e: { currentTarget: { value: string } }) => set(key, fromDateInput(e.currentTarget.value)),
@@ -143,6 +143,10 @@ function PlantFormInner({ existing }: { existing?: Plant }) {
             <input {...num('fertilizingIntervalDays')} />
           </label>
         </div>
+        <label>
+          Zuletzt gedüngt
+          <input {...date('lastFertilizedAt')} />
+        </label>
       </fieldset>
 
       <fieldset>

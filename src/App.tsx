@@ -1,15 +1,25 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect } from 'react'
+import { CareToday } from './components/CareToday'
 import { ComparePage } from './components/ComparePage'
 import { PlantCard } from './components/PlantCard'
 import { PlantDetail } from './components/PlantDetail'
 import { PlantForm } from './components/PlantForm'
+import { SettingsPage } from './components/SettingsPage'
 import { db, requestPersistentStorage } from './db/db'
+import { dueTasks } from './lib/care'
 import { processPendingCutouts } from './lib/cutoutQueue'
 import { routeHref, useRoute } from './lib/router'
 
 function App() {
   const route = useRoute()
+  const dueCount = useLiveQuery(async () => (await db.plants.toArray()).filter((p) => dueTasks(p).length > 0).length, [])
+
+  // Zahl am App-Symbol (installierte PWA), wie viele Pflanzen Pflege brauchen.
+  useEffect(() => {
+    if (dueCount === undefined || !('setAppBadge' in navigator)) return
+    ;(dueCount > 0 ? navigator.setAppBadge(dueCount) : navigator.clearAppBadge()).catch(() => {})
+  }, [dueCount])
 
   useEffect(() => {
     requestPersistentStorage()
@@ -25,6 +35,7 @@ function App() {
     <div className="app">
       {route.name === 'home' && <Home />}
       {route.name === 'new' && <PlantForm />}
+      {route.name === 'settings' && <SettingsPage />}
       {route.name === 'edit' && <PlantForm id={route.id} />}
       {route.name === 'plant' && <PlantDetail id={route.id} />}
       {route.name === 'compare' && <ComparePage id={route.id} a={route.a} b={route.b} />}
@@ -39,6 +50,9 @@ function Home() {
     <>
       <header className="app-header">
         <h1>Meine Pflanzen</h1>
+        <a className="icon-button" href={routeHref({ name: 'settings' })} aria-label="Einstellungen">
+          ⚙️
+        </a>
       </header>
 
       <main>
@@ -51,6 +65,8 @@ function Home() {
             </a>
           </div>
         )}
+
+        {plants && plants.length > 0 && <CareToday plants={plants} />}
 
         {plants && plants.length > 0 && (
           <div className="plant-grid">

@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, deletePlant } from '../db/db'
 import type { Plant } from '../db/types'
+import { CARE_LABEL, careTasks, describeDue, markDone } from '../lib/care'
 import { daysBetween, formatDate, formatDuration } from '../lib/format'
 import { navigate, routeHref } from '../lib/router'
 import { AddPhotoButtons } from './AddPhotoButtons'
@@ -66,6 +67,30 @@ export function PlantDetail({ id }: { id: number }) {
         </a>
       )}
 
+      {careTasks(plant).length > 0 && (
+        <section>
+          <h2>Pflege</h2>
+          <ul className="care-list">
+            {careTasks(plant).map((task) => (
+              <li key={task.kind}>
+                <span aria-hidden>{CARE_LABEL[task.kind].icon}</span>
+                <span>
+                  <strong>{CARE_LABEL[task.kind].verb}</strong>
+                  <span className={task.dueInDays < 0 ? 'overdue' : 'muted'}>{describeDue(task.dueInDays)}</span>
+                </span>
+                <button
+                  type="button"
+                  className="button button--small"
+                  onClick={() => db.plants.update(id, markDone(task.kind))}
+                >
+                  ✓ {CARE_LABEL[task.kind].done}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section>
         <h2>Zeitstrahl</h2>
         <AddPhotoButtons plantId={id} />
@@ -103,6 +128,7 @@ function PlantFacts({ plant }: { plant: Plant }) {
     ['Temperatur', plant.temperature],
     ['Gießen', plant.wateringIntervalDays ? `alle ${plant.wateringIntervalDays} Tage` : undefined],
     ['Zuletzt gegossen', plant.lastWateredAt && formatDate(plant.lastWateredAt)],
+    ['Zuletzt gedüngt', plant.lastFertilizedAt && formatDate(plant.lastFertilizedAt)],
     ['Dünger', plant.fertilizer],
     ['Düngen', plant.fertilizingIntervalDays ? `alle ${plant.fertilizingIntervalDays} Tage` : undefined],
     ['Topfgröße', plant.potSizeCm ? `${plant.potSizeCm} cm` : undefined],

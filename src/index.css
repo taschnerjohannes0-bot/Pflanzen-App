@@ -761,3 +761,107 @@ button.photo-tile__badge {
   object-fit: contain;
   padding: 4px;
 }
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.overdue {
+  color: #b3261e;
+}
+
+.plant-card__image {
+  position: relative;
+}
+
+.plant-card__due {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgb(255 255 255 / 90%);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.9rem;
+  box-shadow: var(--shadow);
+}
+
+/* Pflege: "Heute zu tun" und Pflegeliste */
+.care-today h2 {
+  margin-top: 0;
+}
+
+.care-today ul,
+.care-list {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.care-today li,
+.care-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 16px;
+}
+
+.care-today li + li,
+.care-list li + li {
+  border-top: 1px solid #eef1ec;
+}
+
+.care-today__icon,
+.care-list li > span:first-child {
+  font-size: 1.3rem;
+}
+
+.care-today a,
+.care-list li > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  text-decoration: none;
+}
+
+.care-today a span,
+.care-list li > span:nth-child(2) span {
+  font-size: 0.8rem;
+}
+
+.care-list {
+  margin-bottom: 0;
+}
+
+/* Einstellungen */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 4px 16px 16px;
+  margin-top: 18px;
+}
+
+.card h2 {
+  margin: 14px 0 6px;
+}
+
+.card p {
+  margin: 6px 0;
+}
+
+.settings__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.settings__status {
+  font-weight: 600;
+}

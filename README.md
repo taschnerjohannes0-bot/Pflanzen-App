@@ -22,6 +22,11 @@ Beim ersten Freistellen lädt die App das Modell (~55 MB) einmalig, danach funkt
 
 Hinweis: `@imgly/background-removal` steht unter der AGPL-3.0.
 
+## Pflege und Sicherung
+
+- Fällige Gieß- und Düngetermine erscheinen auf der Startseite unter „Heute zu tun“; die installierte App zeigt die Anzahl am App-Symbol (Badging API).
+- Unter Einstellungen lässt sich eine ZIP-Sicherung aller Pflanzen und Fotos erstellen und wiederherstellen.
+
 ## Aufbau
 
 - `src/db/` – lokale Datenbank (Dexie) mit den Tabellen `plants` und `photos`
