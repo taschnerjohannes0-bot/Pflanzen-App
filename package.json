@@ -9,17 +9,25 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "prebuild": "node scripts/prepare-bg-removal.mjs"
+    "prebuild": "node scripts/prepare-bg-removal.mjs",
+    "build:ios": "VITE_NATIVE=1 npm run build && cap sync ios"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/share": "^8.0.3",
     "@imgly/background-removal": "^1.7.0",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
     "fflate": "^0.8.3",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "subject-lift": "file:plugins/subject-lift"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "@imgly/background-removal-data": "^1.4.5",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",

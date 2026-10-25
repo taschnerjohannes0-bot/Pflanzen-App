@@ -9,10 +9,12 @@ import { SettingsPage } from './components/SettingsPage'
 import { db, requestPersistentStorage } from './db/db'
 import { dueTasks } from './lib/care'
 import { processPendingCutouts } from './lib/cutoutQueue'
+import { listenForNotificationTaps, syncCareNotifications } from './lib/notifications'
 import { routeHref, useRoute } from './lib/router'
 
 function App() {
   const route = useRoute()
+  const allPlants = useLiveQuery(() => db.plants.toArray(), [])
   const dueCount = useLiveQuery(async () => (await db.plants.toArray()).filter((p) => dueTasks(p).length > 0).length, [])
 
   // Zahl am App-Symbol (installierte PWA), wie viele Pflanzen Pflege brauchen.
@@ -25,7 +27,12 @@ function App() {
     requestPersistentStorage()
     // Fotos, deren Freistellung beim letzten Mal unterbrochen wurde, weiter bearbeiten.
     processPendingCutouts()
+    listenForNotificationTaps()
   }, [])
+
+  useEffect(() => {
+    if (allPlants) syncCareNotifications(allPlants).catch((error) => console.error('Erinnerungen', error))
+  }, [allPlants])
 
   useEffect(() => {
     window.scrollTo(0, 0)

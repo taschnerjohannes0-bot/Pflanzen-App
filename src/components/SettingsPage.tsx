@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createBackup, restoreBackup, shareOrDownload } from '../lib/backup'
 import { processPendingCutouts } from '../lib/cutoutQueue'
+import { isNative } from '../lib/platform'
 import { routeHref } from '../lib/router'
 
 function formatBytes(bytes: number): string {
@@ -98,8 +99,9 @@ export function SettingsPage() {
       <section className="card">
         <h2>Erinnerungen</h2>
         <p className="muted">
-          Fällige Pflege steht auf der Startseite unter „Heute zu tun“, und das App-Symbol zeigt die Anzahl, wenn die App
-          installiert ist. Echte Push-Benachrichtigungen kommen mit der späteren Handy-App.
+          {isNative
+            ? 'Du bekommst um 9 Uhr eine Benachrichtigung, wenn eine Pflanze gegossen oder gedüngt werden möchte. Fällige Pflege steht außerdem auf der Startseite unter „Heute zu tun“.'
+            : 'Fällige Pflege steht auf der Startseite unter „Heute zu tun“, und das App-Symbol zeigt die Anzahl, wenn die App installiert ist. Benachrichtigungen gibt es in der iPhone-App.'}
         </p>
       </section>
     </div>

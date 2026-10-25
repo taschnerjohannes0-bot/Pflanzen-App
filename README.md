@@ -19,6 +19,18 @@ npm run lint
 Jeder Push auf `main` baut die App und veröffentlicht sie über GitHub Pages (`.github/workflows/deploy.yml`) unter
 https://taschnerjohannes0-bot.github.io/Pflanzen-App/. Voraussetzung: In den Repository-Einstellungen unter Pages ist als Quelle „GitHub Actions“ gewählt.
 
+## iPhone-App
+
+Die iPhone-App verpackt dieselbe Oberfläche mit [Capacitor](https://capacitorjs.com) (`ios/`).
+Unterschiede zur Web-App: Freistellen über iOS Vision (wie „Motiv freistellen“ in Fotos, ab iOS 17, eigenes Plugin in
+`plugins/subject-lift`), lokale Benachrichtigungen für Gießen und Düngen, Sicherung über das iOS-Teilen-Menü.
+Die AGPL-Bibliothek und das Web-Modell sind in der App nicht enthalten.
+
+```bash
+npm run build:ios      # Web-Teil für die App bauen und ins Xcode-Projekt kopieren
+npx cap open ios       # Xcode öffnen (nur auf dem Mac), dann auf dem iPhone ausführen
+```
+
 ## Freistellen
 
 Fotos werden nach dem Speichern im Hintergrund freigestellt (ISNet-Modell über `@imgly/background-removal`, läuft komplett im Browser).

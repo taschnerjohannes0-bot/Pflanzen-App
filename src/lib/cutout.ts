@@ -1,3 +1,5 @@
+import type { CropRect } from '../db/types'
+
 const MAX_SIDE = 1024
 // Halbtransparente Reste unter NOISE_ALPHA werden entfernt, der Zuschnitt richtet sich nach CROP_ALPHA.
 const NOISE_ALPHA = 64
@@ -7,17 +9,25 @@ const MIN_COMPONENT_SHARE = 0.03
 const SOLID_ALPHA = 220
 const PADDING = 0.04
 
-import type { CropRect } from '../db/types'
-
 export type CutoutProgress = (loaded: number, total: number) => void
 
-// Stellt die Pflanze frei (läuft komplett im Browser) und schneidet auf die Pflanze zu.
+// Stellt die Pflanze frei (direkt auf dem Gerät) und schneidet auf die Pflanze zu.
 export async function cutOutPlant(photo: Blob, crop?: CropRect, onDownload?: CutoutProgress): Promise<Blob> {
-  const { removeBackground } = await import('@imgly/background-removal')
   // Vorher auf den gewählten Rahmen zuschneiden: Nachbarpflanzen und Möbel stören sonst die Erkennung.
   const isFull = !crop || (crop.x <= 0 && crop.y <= 0 && crop.w >= 1 && crop.h >= 1)
   const input = isFull ? photo : await cropImage(photo, crop)
-  const removed = await removeBackground(input, {
+  // In der iPhone-App übernimmt iOS das Freistellen. Die Bedingung steht bewusst direkt hier,
+  // damit der Build die Web-Bibliothek (AGPL) für die App komplett weglässt.
+  const removed =
+    import.meta.env.VITE_NATIVE === '1'
+      ? await (await import('./subjectLift')).liftSubject(input)
+      : await removeWithModel(input, onDownload)
+  return cropToContent(removed)
+}
+
+async function removeWithModel(input: Blob, onDownload?: CutoutProgress): Promise<Blob> {
+  const { removeBackground } = await import('@imgly/background-removal')
+  return removeBackground(input, {
     publicPath: new URL('bg-removal/', location.origin + import.meta.env.BASE_URL).href,
     model: 'isnet_quint8',
     device: 'cpu',
@@ -26,7 +36,6 @@ export async function cutOutPlant(photo: Blob, crop?: CropRect, onDownload?: Cut
       if (key.startsWith('fetch:')) onDownload?.(current, total)
     },
   })
-  return cropToContent(removed)
 }
 
 async function cropImage(photo: Blob, crop: CropRect): Promise<Blob> {
