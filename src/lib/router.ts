@@ -5,6 +5,7 @@ export type Route =
   | { name: 'new' }
   | { name: 'plant'; id: number }
   | { name: 'edit'; id: number }
+  | { name: 'compare'; id: number; a?: number; b?: number }
 
 // Hash-Routing (#/pflanze/3), damit die Zurück-Taste am Handy funktioniert und kein Server nötig ist.
 export function parseRoute(hash: string): Route {
@@ -12,7 +13,12 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'neu') return { name: 'new' }
   if (parts[0] === 'pflanze' && Number(parts[1])) {
     const id = Number(parts[1])
-    return parts[2] === 'bearbeiten' ? { name: 'edit', id } : { name: 'plant', id }
+    if (parts[2] === 'bearbeiten') return { name: 'edit', id }
+    if (parts[2] === 'vergleich') {
+      const [a, b] = [Number(parts[3]) || undefined, Number(parts[4]) || undefined]
+      return { name: 'compare', id, a, b }
+    }
+    return { name: 'plant', id }
   }
   return { name: 'home' }
 }
@@ -27,6 +33,8 @@ export function routeHref(route: Route): string {
       return `#/pflanze/${route.id}`
     case 'edit':
       return `#/pflanze/${route.id}/bearbeiten`
+    case 'compare':
+      return `#/pflanze/${route.id}/vergleich` + (route.a && route.b ? `/${route.a}/${route.b}` : '')
   }
 }
 

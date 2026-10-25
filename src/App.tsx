@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect } from 'react'
+import { ComparePage } from './components/ComparePage'
 import { PlantCard } from './components/PlantCard'
 import { PlantDetail } from './components/PlantDetail'
 import { PlantForm } from './components/PlantForm'
@@ -26,6 +27,7 @@ function App() {
       {route.name === 'new' && <PlantForm />}
       {route.name === 'edit' && <PlantForm id={route.id} />}
       {route.name === 'plant' && <PlantDetail id={route.id} />}
+      {route.name === 'compare' && <ComparePage id={route.id} a={route.a} b={route.b} />}
     </div>
   )
 }

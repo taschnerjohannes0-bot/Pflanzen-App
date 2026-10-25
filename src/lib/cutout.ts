@@ -4,6 +4,7 @@ const NOISE_ALPHA = 64
 const CROP_ALPHA = 128
 // Flächen kleiner als dieser Anteil der größten Fläche gelten als Störung.
 const MIN_COMPONENT_SHARE = 0.03
+const SOLID_ALPHA = 220
 const PADDING = 0.04
 
 import type { CropRect } from '../db/types'
@@ -14,7 +15,8 @@ export type CutoutProgress = (loaded: number, total: number) => void
 export async function cutOutPlant(photo: Blob, crop?: CropRect, onDownload?: CutoutProgress): Promise<Blob> {
   const { removeBackground } = await import('@imgly/background-removal')
   // Vorher auf den gewählten Rahmen zuschneiden: Nachbarpflanzen und Möbel stören sonst die Erkennung.
-  const input = crop ? await cropImage(photo, crop) : photo
+  const isFull = !crop || (crop.x <= 0 && crop.y <= 0 && crop.w >= 1 && crop.h >= 1)
+  const input = isFull ? photo : await cropImage(photo, crop)
   const removed = await removeBackground(input, {
     publicPath: new URL('bg-removal/', location.origin + import.meta.env.BASE_URL).href,
     model: 'isnet_quint8',
@@ -102,12 +104,13 @@ function mainComponents(data: Uint8ClampedArray, width: number, height: number):
   for (let start = 0; start < size; start++) {
     if (label[start] || data[start * 4 + 3] < NOISE_ALPHA) continue
     const id = areas.length
+    // Gezählt werden nur fast deckende Pixel: halbtransparente "Geister" (Möbel, Deko) fallen so heraus.
     let area = 0
     label[start] = id
     stack.push(start)
     while (stack.length) {
       const i = stack.pop()!
-      area++
+      if (data[i * 4 + 3] >= SOLID_ALPHA) area++
       const x = i % width
       const neighbours = [x > 0 ? i - 1 : -1, x < width - 1 ? i + 1 : -1, i - width, i + width]
       for (const n of neighbours) {

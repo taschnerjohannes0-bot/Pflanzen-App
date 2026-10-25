@@ -1,13 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState } from 'react'
-import { db, deletePlant, reframePhoto, retryCutout } from '../db/db'
-import type { Photo, Plant } from '../db/types'
-import { formatDate } from '../lib/format'
+import { db, deletePlant } from '../db/db'
+import type { Plant } from '../db/types'
+import { daysBetween, formatDate, formatDuration } from '../lib/format'
 import { navigate, routeHref } from '../lib/router'
-import { useCutoutState } from '../lib/cutoutQueue'
 import { AddPhotoButtons } from './AddPhotoButtons'
-import { FrameEditor } from './FrameEditor'
 import { PhotoImage } from './PhotoImage'
+import { TimelineEntry } from './TimelineEntry'
 
 export function PlantDetail({ id }: { id: number }) {
   const plant = useLiveQuery(() => db.plants.get(id), [id])
@@ -17,6 +15,10 @@ export function PlantDetail({ id }: { id: number }) {
   )
 
   if (plant === undefined || photos === undefined) return null
+
+  const latest = photos[0]
+  const first = photos[photos.length - 1]
+  const currentHeight = photos.find((p) => p.heightCm !== undefined)?.heightCm ?? plant.heightCm
 
   async function handleDelete() {
     if (!confirm(`„${plant!.name}“ und alle Fotos wirklich löschen?`)) return
@@ -37,17 +39,47 @@ export function PlantDetail({ id }: { id: number }) {
       </header>
       {plant.species && <p className="muted species">{plant.species}</p>}
 
+      {latest && (
+        <div className="hero">
+          <PhotoImage photo={latest} alt={plant.name} />
+        </div>
+      )}
+
+      <div className="stats">
+        <div>
+          <strong>{photos.length}</strong>
+          <span>{photos.length === 1 ? 'Foto' : 'Fotos'}</span>
+        </div>
+        <div>
+          <strong>{first && latest ? formatDuration(daysBetween(first.takenAt, latest.takenAt)) : '–'}</strong>
+          <span>dokumentiert</span>
+        </div>
+        <div>
+          <strong>{currentHeight !== undefined ? `${currentHeight} cm` : '–'}</strong>
+          <span>Höhe</span>
+        </div>
+      </div>
+
+      {photos.length >= 2 && (
+        <a className="button button--primary button--block compare-button" href={routeHref({ name: 'compare', id })}>
+          ⇆ Fortschritt vergleichen
+        </a>
+      )}
+
       <section>
-        <h2>Fotos ({photos.length})</h2>
+        <h2>Zeitstrahl</h2>
         <AddPhotoButtons plantId={id} />
         {photos.length === 0 ? (
           <p className="muted">Noch keine Fotos. Nimm das erste auf, um den Fortschritt festzuhalten.</p>
         ) : (
-          <div className="photo-grid">
-            {photos.map((photo) => (
-              <PhotoTile key={photo.id} photo={photo} />
-            ))}
-          </div>
+          <ol className="timeline">
+            {photos.map((photo, i) => {
+              const older = photos.slice(i + 1).find((p) => p.heightCm !== undefined)
+              const delta =
+                photo.heightCm !== undefined && older?.heightCm !== undefined ? photo.heightCm - older.heightCm : undefined
+              return <TimelineEntry key={photo.id} photo={photo} heightDelta={delta} />
+            })}
+          </ol>
         )}
       </section>
 
@@ -60,60 +92,6 @@ export function PlantDetail({ id }: { id: number }) {
         Pflanze löschen
       </button>
     </div>
-  )
-}
-
-function PhotoTile({ photo }: { photo: Photo }) {
-  const cutoutState = useCutoutState()
-  const isActive = cutoutState.activePhotoId === photo.id
-  const [reframing, setReframing] = useState(false)
-
-  async function handleDelete() {
-    if (confirm('Dieses Foto löschen?')) await db.photos.delete(photo.id!)
-  }
-
-  return (
-    <figure className="photo-tile">
-      <div className="photo-tile__image">
-        <PhotoImage photo={photo} alt={`Foto vom ${formatDate(photo.takenAt)}`} />
-        {photo.cutoutStatus === 'pending' && (
-          <span className="photo-tile__badge">
-            {isActive && cutoutState.download !== undefined && cutoutState.download < 1
-              ? `Lade Freisteller … ${Math.round(cutoutState.download * 100)} %`
-              : isActive
-                ? 'Wird freigestellt …'
-                : 'Wartet …'}
-          </span>
-        )}
-        {photo.cutoutStatus === 'failed' && (
-          <button type="button" className="photo-tile__badge" onClick={() => retryCutout(photo)}>
-            Freistellen fehlgeschlagen · erneut
-          </button>
-        )}
-      </div>
-      <figcaption>
-        <span>{formatDate(photo.takenAt)}</span>
-        <span>
-          <button type="button" className="link-button" onClick={() => setReframing(true)} aria-label="Freistellung anpassen">
-            ✂️
-          </button>
-          <button type="button" className="link-button" onClick={handleDelete} aria-label="Foto löschen">
-            ✕
-          </button>
-        </span>
-      </figcaption>
-      {reframing && (
-        <FrameEditor
-          photo={photo.blob}
-          initial={photo.crop}
-          onCancel={() => setReframing(false)}
-          onConfirm={async (crop) => {
-            setReframing(false)
-            await reframePhoto(photo, crop)
-          }}
-        />
-      )}
-    </figure>
   )
 }
 
