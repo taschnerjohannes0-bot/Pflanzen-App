@@ -1,4 +1,12 @@
 export type Light = 'sonnig' | 'hell' | 'halbschattig' | 'schattig'
+// Ausschnitt um die Pflanze, relativ zur Bildgröße (0–1).
+export interface CropRect {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
 export type CutoutStatus = 'pending' | 'done' | 'failed'
 export type Humidity = 'niedrig' | 'mittel' | 'hoch'
 
@@ -31,6 +39,7 @@ export interface Photo {
   // Freigestellte Pflanze als PNG mit transparentem Hintergrund.
   cutout?: Blob
   cutoutStatus?: CutoutStatus
+  crop?: CropRect
   takenAt: string
   heightCm?: number
   note?: string

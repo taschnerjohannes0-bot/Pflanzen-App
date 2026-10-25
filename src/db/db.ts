@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import { processPendingCutouts } from '../lib/cutoutQueue'
-import type { Photo, Plant } from './types'
+import type { CropRect, Photo, Plant } from './types'
 
 // Alles bleibt lokal im Browser (IndexedDB), Fotos werden als Blob gespeichert.
 export const db = new Dexie('pflanzentagebuch') as Dexie & {
@@ -26,8 +26,9 @@ export async function requestPersistentStorage(): Promise<boolean> {
   return (await navigator.storage.persisted()) || navigator.storage.persist()
 }
 
-export async function addPhoto(plantId: number, blob: Blob, takenAt: string): Promise<void> {
-  await db.photos.add({ plantId, blob, takenAt, cutoutStatus: 'pending' })
+// crop = null heißt: nicht freistellen, Originalfoto zeigen.
+export async function addPhoto(plantId: number, blob: Blob, takenAt: string, crop: CropRect | null): Promise<void> {
+  await db.photos.add({ plantId, blob, takenAt, ...(crop ? { crop, cutoutStatus: 'pending' } : {}) })
   await db.plants.update(plantId, { updatedAt: new Date().toISOString() })
   processPendingCutouts()
 }
@@ -42,4 +43,13 @@ export async function deletePlant(plantId: number): Promise<void> {
 export async function retryCutout(photo: Photo): Promise<void> {
   await db.photos.update(photo.id!, { cutoutStatus: 'pending' })
   processPendingCutouts()
+}
+
+export async function reframePhoto(photo: Photo, crop: CropRect | null): Promise<void> {
+  if (crop) {
+    await db.photos.update(photo.id!, { crop, cutoutStatus: 'pending' })
+    processPendingCutouts()
+  } else {
+    await db.photos.update(photo.id!, { crop: undefined, cutout: undefined, cutoutStatus: undefined })
+  }
 }

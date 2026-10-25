@@ -1,10 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, deletePlant, retryCutout } from '../db/db'
+import { useState } from 'react'
+import { db, deletePlant, reframePhoto, retryCutout } from '../db/db'
 import type { Photo, Plant } from '../db/types'
 import { formatDate } from '../lib/format'
 import { navigate, routeHref } from '../lib/router'
 import { useCutoutState } from '../lib/cutoutQueue'
 import { AddPhotoButtons } from './AddPhotoButtons'
+import { FrameEditor } from './FrameEditor'
 import { PhotoImage } from './PhotoImage'
 
 export function PlantDetail({ id }: { id: number }) {
@@ -64,6 +66,7 @@ export function PlantDetail({ id }: { id: number }) {
 function PhotoTile({ photo }: { photo: Photo }) {
   const cutoutState = useCutoutState()
   const isActive = cutoutState.activePhotoId === photo.id
+  const [reframing, setReframing] = useState(false)
 
   async function handleDelete() {
     if (confirm('Dieses Foto löschen?')) await db.photos.delete(photo.id!)
@@ -90,10 +93,26 @@ function PhotoTile({ photo }: { photo: Photo }) {
       </div>
       <figcaption>
         <span>{formatDate(photo.takenAt)}</span>
-        <button type="button" className="link-button" onClick={handleDelete} aria-label="Foto löschen">
-          ✕
-        </button>
+        <span>
+          <button type="button" className="link-button" onClick={() => setReframing(true)} aria-label="Freistellung anpassen">
+            ✂️
+          </button>
+          <button type="button" className="link-button" onClick={handleDelete} aria-label="Foto löschen">
+            ✕
+          </button>
+        </span>
       </figcaption>
+      {reframing && (
+        <FrameEditor
+          photo={photo.blob}
+          initial={photo.crop}
+          onCancel={() => setReframing(false)}
+          onConfirm={async (crop) => {
+            setReframing(false)
+            await reframePhoto(photo, crop)
+          }}
+        />
+      )}
     </figure>
   )
 }

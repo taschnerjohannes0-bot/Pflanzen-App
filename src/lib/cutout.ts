@@ -6,12 +6,16 @@ const CROP_ALPHA = 128
 const MIN_COMPONENT_SHARE = 0.03
 const PADDING = 0.04
 
+import type { CropRect } from '../db/types'
+
 export type CutoutProgress = (loaded: number, total: number) => void
 
 // Stellt die Pflanze frei (läuft komplett im Browser) und schneidet auf die Pflanze zu.
-export async function cutOutPlant(photo: Blob, onDownload?: CutoutProgress): Promise<Blob> {
+export async function cutOutPlant(photo: Blob, crop?: CropRect, onDownload?: CutoutProgress): Promise<Blob> {
   const { removeBackground } = await import('@imgly/background-removal')
-  const removed = await removeBackground(photo, {
+  // Vorher auf den gewählten Rahmen zuschneiden: Nachbarpflanzen und Möbel stören sonst die Erkennung.
+  const input = crop ? await cropImage(photo, crop) : photo
+  const removed = await removeBackground(input, {
     publicPath: new URL('bg-removal/', location.origin + import.meta.env.BASE_URL).href,
     model: 'isnet_quint8',
     device: 'cpu',
@@ -21,6 +25,22 @@ export async function cutOutPlant(photo: Blob, onDownload?: CutoutProgress): Pro
     },
   })
   return cropToContent(removed)
+}
+
+async function cropImage(photo: Blob, crop: CropRect): Promise<Blob> {
+  const bitmap = await createImageBitmap(photo)
+  const sx = Math.round(crop.x * bitmap.width)
+  const sy = Math.round(crop.y * bitmap.height)
+  const sw = Math.max(1, Math.round(crop.w * bitmap.width))
+  const sh = Math.max(1, Math.round(crop.h * bitmap.height))
+  const canvas = document.createElement('canvas')
+  canvas.width = sw
+  canvas.height = sh
+  canvas.getContext('2d')!.drawImage(bitmap, sx, sy, sw, sh, 0, 0, sw, sh)
+  bitmap.close()
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Zuschnitt fehlgeschlagen'))), 'image/jpeg', 0.92),
+  )
 }
 
 async function cropToContent(png: Blob): Promise<Blob> {

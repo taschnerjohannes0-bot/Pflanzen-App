@@ -27,7 +27,7 @@ export async function processPendingCutouts(): Promise<void> {
       if (!photo) break
       setState({ activePhotoId: photo.id })
       try {
-        const cutout = await cutOutPlant(photo.blob, (loaded, total) =>
+        const cutout = await cutOutPlant(photo.blob, photo.crop, (loaded, total) =>
           setState({ activePhotoId: photo.id, download: loaded / total }),
         )
         await db.photos.update(photo.id!, { cutout, cutoutStatus: 'done' })
