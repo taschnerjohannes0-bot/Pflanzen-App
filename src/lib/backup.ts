@@ -1,5 +1,6 @@
 import { strFromU8, strToU8, unzip, zip } from 'fflate'
 import { db } from '../db/db'
+import { isNative } from './platform'
 import type { Photo, Plant } from '../db/types'
 
 const FORMAT = 'pflanzentagebuch-backup'
@@ -75,6 +76,7 @@ export async function restoreBackup(file: Blob): Promise<{ plants: number; photo
 
 // Am Handy über das Teilen-Menü (z. B. in iCloud/Google Drive sichern), sonst als Download.
 export async function shareOrDownload(file: File): Promise<void> {
+  if (isNative) return shareNative(file)
   if (navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: file.name })
@@ -89,4 +91,24 @@ export async function shareOrDownload(file: File): Promise<void> {
   a.download = file.name
   a.click()
   setTimeout(() => URL.revokeObjectURL(url), 10_000)
+}
+
+// In der iPhone-App: Datei in den Cache schreiben und das iOS-Teilen-Menü öffnen (Dateien, iCloud, AirDrop …).
+async function shareNative(file: File): Promise<void> {
+  const [{ Filesystem, Directory }, { Share }] = await Promise.all([
+    import('@capacitor/filesystem'),
+    import('@capacitor/share'),
+  ])
+  const data = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve((reader.result as string).split(',')[1])
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
+  const { uri } = await Filesystem.writeFile({ path: file.name, data, directory: Directory.Cache })
+  try {
+    await Share.share({ title: file.name, files: [uri] })
+  } catch (error) {
+    if (!String(error).toLowerCase().includes('cancel')) throw error
+  }
 }

@@ -10,6 +10,11 @@ const dataDir = join(root, 'node_modules', '@imgly', 'background-removal-data', 
 const ortDir = join(root, 'node_modules', 'onnxruntime-web', 'dist')
 
 rmSync(out, { recursive: true, force: true })
+// Die iPhone-App stellt mit iOS-Bordmitteln frei und braucht das Modell nicht.
+if (process.env.VITE_NATIVE === '1') {
+  console.log('iPhone-Build: Freistell-Modell wird nicht benötigt')
+  process.exit(0)
+}
 mkdirSync(out, { recursive: true })
 
 const resources = {}

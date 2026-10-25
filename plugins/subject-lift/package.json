@@ -1,0 +1,12 @@
+{
+  "name": "subject-lift",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Stellt das Motiv eines Fotos mit der iOS-Vision-Funktion frei (wie „Motiv freistellen“ in Fotos).",
+  "files": ["ios/Sources", "Package.swift"],
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  }
+}
