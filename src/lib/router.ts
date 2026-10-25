@@ -1,0 +1,63 @@
+import { useSyncExternalStore } from 'react'
+
+export type Route =
+  | { name: 'home' }
+  | { name: 'new' }
+  | { name: 'settings' }
+  | { name: 'plant'; id: number }
+  | { name: 'edit'; id: number }
+  | { name: 'compare'; id: number; a?: number; b?: number }
+
+// Hash-Routing (#/pflanze/3), damit die Zurück-Taste am Handy funktioniert und kein Server nötig ist.
+export function parseRoute(hash: string): Route {
+  const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean)
+  if (parts[0] === 'neu') return { name: 'new' }
+  if (parts[0] === 'einstellungen') return { name: 'settings' }
+  if (parts[0] === 'pflanze' && Number(parts[1])) {
+    const id = Number(parts[1])
+    if (parts[2] === 'bearbeiten') return { name: 'edit', id }
+    if (parts[2] === 'vergleich') {
+      const [a, b] = [Number(parts[3]) || undefined, Number(parts[4]) || undefined]
+      return { name: 'compare', id, a, b }
+    }
+    return { name: 'plant', id }
+  }
+  return { name: 'home' }
+}
+
+export function routeHref(route: Route): string {
+  switch (route.name) {
+    case 'home':
+      return '#/'
+    case 'new':
+      return '#/neu'
+    case 'settings':
+      return '#/einstellungen'
+    case 'plant':
+      return `#/pflanze/${route.id}`
+    case 'edit':
+      return `#/pflanze/${route.id}/bearbeiten`
+    case 'compare':
+      return `#/pflanze/${route.id}/vergleich` + (route.a && route.b ? `/${route.a}/${route.b}` : '')
+  }
+}
+
+export function navigate(route: Route, { replace = false } = {}) {
+  const href = routeHref(route)
+  if (replace) {
+    history.replaceState(null, '', href)
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+  } else {
+    location.hash = href
+  }
+}
+
+function subscribe(callback: () => void) {
+  window.addEventListener('hashchange', callback)
+  return () => window.removeEventListener('hashchange', callback)
+}
+
+export function useRoute(): Route {
+  const hash = useSyncExternalStore(subscribe, () => location.hash)
+  return parseRoute(hash)
+}

@@ -1,0 +1,46 @@
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
+
+// https://vite.dev/config/
+export default defineConfig({
+  // Für GitHub Pages läuft die App unter /<repo>/, lokal unter /.
+  base: process.env.BASE_PATH ?? '/',
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      workbox: {
+        // Das Freistell-Modell (~55 MB) wird erst bei Bedarf geladen und dann dauerhaft gecacht.
+        globIgnores: ['bg-removal/**', 'assets/*.wasm'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.includes('/bg-removal/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'bg-removal',
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
+      },
+      manifest: {
+        name: 'Pflanzentagebuch',
+        short_name: 'Pflanzen',
+        description: 'Fotos und Daten deiner Pflanzen festhalten und den Fortschritt vergleichen.',
+        lang: 'de',
+        start_url: '.',
+        scope: '.',
+        display: 'standalone',
+        background_color: '#f4efe6',
+        theme_color: '#2f6b4f',
+        icons: [
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+    }),
+  ],
+})
